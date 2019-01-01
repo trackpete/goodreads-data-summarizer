@@ -1,0 +1,16 @@
+{
+  "name": "goodreads-data-summarizer",
+  "version": "1.0.0",
+  "description": "I wanted to summarize some information about the books I've read,\r which leads us to this. It's an experimental work in progress at\r this moment and I've no idea if it'll work for anyone else. ;)",
+  "main": "data.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "dotenv": "^6.2.0",
+    "xml2js": "^0.4.19"
+  }
+}
