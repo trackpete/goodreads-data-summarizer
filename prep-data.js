@@ -32,7 +32,10 @@ const ShelfURL =
 // only fetch deltas, etc. - it's gonna be run very rarely so just builds everything)
 
 db.run(
-  "CREATE TABLE IF NOT EXISTS responseData (name TEXT PRIMARY KEY, source TEXT, rawData TEXT, jsData TEXT)"
+  "CREATE TABLE IF NOT EXISTS responseData (name TEXT PRIMARY KEY, source TEXT, rawData TEXT, jsData TEXT, altName TEXT)"
+);
+db.run(
+  "CREATE TABLE IF NOT EXISTS missingASIN (gid TEXT PRIMARY KEY, url TEXT)"
 );
 
 axios
@@ -70,10 +73,11 @@ axios
     });
   })
   .catch(function(error) {
-    console.log(error);
+    //console.log(error);
+    console.log("!! There was an error fetching the Shelf URL!");
   })
   .then(function() {
-    // always executed, saving for later
+    // eh nothing here right now
   });
 
 async function delayedGoodreadsBookLookup(thisBookURL, thisGID, callback) {
@@ -87,34 +91,43 @@ async function delayedGoodreadsBookLookup(thisBookURL, thisGID, callback) {
     })
     .then(function(response) {
       parseString(response.data, function(err, jsonResponse) {
-        db.run(
-          "INSERT OR REPLACE INTO responseData (name, source, rawData, jsData) VALUES (?, ?, ?, ?)",
-          [thisGID, "gr_book_api", response.data, JSON.stringify(jsonResponse)]
-        );
         var thisASIN = jsonResponse.GoodreadsResponse.book[0].kindle_asin[0];
-        console.log("          > Kindle ASIN:", thisASIN);
+        db.run(
+          "INSERT OR REPLACE INTO responseData (name, source, rawData, jsData, altName) VALUES (?, ?, ?, ?, ?)",
+          [thisGID, "gr_book_api", response.data, JSON.stringify(jsonResponse), thisASIN]
+        );
+        
+        if (typeof thisASIN !== 'undefined' && thisASIN) {
+          console.log("          > Kindle ASIN:", thisASIN);
         var thisAmazonURL = "https://www.amazon.com/dp/" + thisASIN;        
         axios.get(thisAmazonURL, {})
         .then(function(response) {
             console.log("          > Saving", thisAmazonURL);
             //console.log(response.data);
             db.run(
-                "INSERT OR REPLACE INTO responseData (name, source, rawData) VALUES (?, ?, ?)",
-                [thisASIN, "amz_dp", response.data]
+                "INSERT OR REPLACE INTO responseData (name, source, rawData, altName) VALUES (?, ?, ?, ?)",
+                [thisASIN, "amz_dp", response.data, thisGID]
               );            
 
         }).catch(function(error) {
-          console.log(error);
+          console.log("!! There was an error fetching the amazon URL!");
+          //console.log(error);
        }).then(function() {
         callback();
       });
+    } else {
+      console.log("!! ERROR - ASIN undefined!");
+      db.run("INSERT OR REPLACE INTO missingASIN (gid, url) VALUES (?, ?)", [thisGID, thisBookURL]);
+      callback();
+    }
 
 
 
       });
     })
     .catch(function(error) {
-      console.log(error);
+      console.log("!! There was an error fetching the book api data from gr!");
+      //console.log(error);
     });
 
 }

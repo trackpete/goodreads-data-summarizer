@@ -17,4 +17,7 @@ this moment and I've no idea if it'll work for anyone else. ;)
 8. review.book.id = goodreads ID. Send this to book show API (i.e. https://www.goodreads.com/book/show/42969396.xml) and it returns kindle ASIN. https://amazon.com/dp/ASIN gives you the Amazon web page.
 9. Since the goodreads API is extremely rate limited, I need to make sure to do these calls synchronously with a delay. Wee. This is one of the minor annoyances I find working with node sometimes, even though usually async is way better.
 10. Decided to change my methodology a bit - start by focusing on pulling in data and saving it, then worry about processing it later from a db. 1s delay between requests will waste too much time to dev + tweak on realtime data.
+11. After working through ensuring only one book was requested at time and the API wasn't spammed, I ran a first pull!
+12. Great, some books on Goodreads don't have ASINs for Amazon even though they're listed on Amazon. Ok? I didn't expect this.
+
 
