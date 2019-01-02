@@ -1,6 +1,8 @@
 require("dotenv").config();
 
 const axios = require("axios");
+const axiosRetry = require('axios-retry');
+axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 const parseString = require("xml2js").parseString;
 const sqlite3 = require("sqlite3").verbose();
 const async = require("async");
