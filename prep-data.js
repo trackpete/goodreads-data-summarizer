@@ -46,7 +46,8 @@ axios
       key: process.env.GOODREADS_API_KEY,
       shelf: "read",
       per_page: "200",
-      v: "2"
+      v: "2",
+      sort: "date_added"
     }
   })
   .then(function(response) {
@@ -93,7 +94,7 @@ async function delayedGoodreadsBookLookup(thisBookURL, thisGID, callback) {
     })
     .then(function(response) {
       parseString(response.data, function(err, jsonResponse) {
-        var thisASIN = jsonResponse.GoodreadsResponse.book[0].kindle_asin[0];
+        var thisASIN = jsonResponse.GoodreadsResponse.book[0].asin[0];        
         db.run(
           "INSERT OR REPLACE INTO responseData (name, source, rawData, jsData, altName) VALUES (?, ?, ?, ?, ?)",
           [thisGID, "gr_book_api", response.data, JSON.stringify(jsonResponse), thisASIN]

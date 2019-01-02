@@ -19,5 +19,6 @@ this moment and I've no idea if it'll work for anyone else. ;)
 10. Decided to change my methodology a bit - start by focusing on pulling in data and saving it, then worry about processing it later from a db. 1s delay between requests will waste too much time to dev + tweak on realtime data.
 11. After working through ensuring only one book was requested at time and the API wasn't spammed, I ran a first pull!
 12. Great, some books on Goodreads don't have ASINs for Amazon even though they're listed on Amazon. Ok? I didn't expect this.
+13. Looks like the above happens when a new goodreads id is created for a book. Possibly can be found via work.best_book_id? Checked - nope, sometimes that leads to hardcover. Hrm. Seems like the easiest way to solve this long term is to manually go through the ~15 or so books on gr and switch the editions on my shelf, then re-run.
 
 
