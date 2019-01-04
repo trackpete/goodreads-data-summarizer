@@ -37,7 +37,7 @@ db.run(
   "CREATE TABLE IF NOT EXISTS responseData (name TEXT PRIMARY KEY, source TEXT, rawData TEXT, jsData TEXT, altName TEXT)"
 );
 db.run(
-  "CREATE TABLE IF NOT EXISTS missingASIN (gid TEXT PRIMARY KEY, url TEXT)"
+  "CREATE TABLE IF NOT EXISTS ASINerror (gid TEXT PRIMARY KEY, url TEXT, error TEXT)"
 );
 
 axios
@@ -114,13 +114,14 @@ async function delayedGoodreadsBookLookup(thisBookURL, thisGID, callback) {
 
         }).catch(function(error) {
           console.log("!! There was an error fetching the amazon URL!");
+          db.run("INSERT OR REPLACE INTO ASINerror (gid, url, error) VALUES (?, ?, ?)", [thisGID, thisBookURL, 'Amazon 404']);
           //console.log(error);
        }).then(function() {
         callback();
       });
     } else {
       console.log("!! ERROR - ASIN undefined!");
-      db.run("INSERT OR REPLACE INTO missingASIN (gid, url) VALUES (?, ?)", [thisGID, thisBookURL]);
+      db.run("INSERT OR REPLACE INTO ASINerror (gid, url, error) VALUES (?, ?, ?)", [thisGID, thisBookURL, 'No ASIN on GR']);
       callback();
     }
 
