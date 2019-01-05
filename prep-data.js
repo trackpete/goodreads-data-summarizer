@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const axios = require("axios");
-const axiosRetry = require('axios-retry');
+const axiosRetry = require("axios-retry");
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 const parseString = require("xml2js").parseString;
 const sqlite3 = require("sqlite3").verbose();
@@ -62,16 +62,33 @@ axios
           JSON.stringify(jsonResponse)
         ]
       );
-      
+
       // need this to be synchronous to avoid spamming the GR API
       //jsonResponse.GoodreadsResponse.reviews[0].review.forEach(review => {
-      async.eachLimit(jsonResponse.GoodreadsResponse.reviews[0].review, 1, function(review, callback) {
-        // Get goodreads ID to send to API for lookup
-        var thisGID = review.book[0].id[0]._;
-        var thisBookURL =
-          "https://www.goodreads.com/book/show/" + thisGID + ".xml";
-        delayedGoodreadsBookLookup(thisBookURL, thisGID, callback);
-      });
+      async.eachLimit(
+        jsonResponse.GoodreadsResponse.reviews[0].review,
+        1,
+        function(review, callback) {
+          // Check to see when it was added, skip anything not added in 2018
+          // Yes this is hard coded for now since I don't plan on running this again until 2019 and
+          // I expect all these APIs might have changed!
+          var thisBookDateAdded = review.date_added[0];
+          if (thisBookDateAdded.match(/ 2018$/)) {
+            // Get goodreads ID to send to API for lookup
+            var thisGID = review.book[0].id[0]._;
+            var thisBookURL =
+              "https://www.goodreads.com/book/show/" + thisGID + ".xml";
+            delayedGoodreadsBookLookup(
+              thisBookURL,
+              thisGID,
+              thisBookDateAdded,
+              callback
+            );
+          } else {
+            callback();
+          }
+        }
+      );
       //console.log(JSON.stringify(jsonResponse.GoodreadsResponse.reviews, null, 2));
     });
   })
@@ -83,8 +100,14 @@ axios
     // eh nothing here right now
   });
 
-async function delayedGoodreadsBookLookup(thisBookURL, thisGID, callback) {
+async function delayedGoodreadsBookLookup(
+  thisBookURL,
+  thisGID,
+  thisBookDateAdded,
+  callback
+) {
   console.log(" *BOOKAPI:* Will fetch information shortly for:", thisBookURL);
+  console.log("          (this book was added on", thisBookDateAdded + ")");
   await delay(2000);
   axios
     .get(thisBookURL, {
@@ -94,46 +117,56 @@ async function delayedGoodreadsBookLookup(thisBookURL, thisGID, callback) {
     })
     .then(function(response) {
       parseString(response.data, function(err, jsonResponse) {
-        var thisASIN = jsonResponse.GoodreadsResponse.book[0].asin[0];        
+        var thisASIN = jsonResponse.GoodreadsResponse.book[0].asin[0];
         db.run(
           "INSERT OR REPLACE INTO responseData (name, source, rawData, jsData, altName) VALUES (?, ?, ?, ?, ?)",
-          [thisGID, "gr_book_api", response.data, JSON.stringify(jsonResponse), thisASIN]
+          [
+            thisGID,
+            "gr_book_api",
+            response.data,
+            JSON.stringify(jsonResponse),
+            thisASIN
+          ]
         );
-        
-        if (typeof thisASIN !== 'undefined' && thisASIN) {
+
+        if (typeof thisASIN !== "undefined" && thisASIN) {
           console.log("          > Kindle ASIN:", thisASIN);
-        var thisAmazonURL = "https://www.amazon.com/dp/" + thisASIN;        
-        axios.get(thisAmazonURL, {})
-        .then(function(response) {
-            console.log("          > Saving", thisAmazonURL);
-            //console.log(response.data);
-            db.run(
+          var thisAmazonURL = "https://www.amazon.com/dp/" + thisASIN;
+          axios
+            .get(thisAmazonURL, {})
+            .then(function(response) {
+              console.log("          > Saving", thisAmazonURL);
+              //console.log(response.data);
+              db.run(
                 "INSERT OR REPLACE INTO responseData (name, source, rawData, altName) VALUES (?, ?, ?, ?)",
                 [thisASIN, "amz_dp", response.data, thisGID]
-              );            
-
-        }).catch(function(error) {
-          console.log("!! There was an error fetching the amazon URL!");
-          db.run("INSERT OR REPLACE INTO ASINerror (gid, url, error) VALUES (?, ?, ?)", [thisGID, thisBookURL, 'Amazon 404']);
-          //console.log(error);
-       }).then(function() {
-        callback();
-      });
-    } else {
-      console.log("!! ERROR - ASIN undefined!");
-      db.run("INSERT OR REPLACE INTO ASINerror (gid, url, error) VALUES (?, ?, ?)", [thisGID, thisBookURL, 'No ASIN on GR']);
-      callback();
-    }
-
-
-
+              );
+            })
+            .catch(function(error) {
+              console.log("!! There was an error fetching the amazon URL!");
+              db.run(
+                "INSERT OR REPLACE INTO ASINerror (gid, url, error) VALUES (?, ?, ?)",
+                [thisGID, thisBookURL, "Amazon 404"]
+              );
+              //console.log(error);
+            })
+            .then(function() {
+              callback();
+            });
+        } else {
+          console.log("!! ERROR - ASIN undefined!");
+          db.run(
+            "INSERT OR REPLACE INTO ASINerror (gid, url, error) VALUES (?, ?, ?)",
+            [thisGID, thisBookURL, "No ASIN on GR"]
+          );
+          callback();
+        }
       });
     })
     .catch(function(error) {
       console.log("!! There was an error fetching the book api data from gr!");
       //console.log(error);
     });
-
 }
 
 async function delay(msec) {
