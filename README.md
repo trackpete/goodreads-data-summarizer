@@ -25,5 +25,11 @@ this moment and I've no idea if it'll work for anyone else. ;)
 16. Got everything loaded into local dbs, messing with extraction into a table for querying
 17. Just realized I'm running code/tests on ubuntu-on-windows and it uses node8 instead of the version of node10 I have installed on windows (duh), which explains why I've been seeing some weird es6 errors attempting various things. Fixing this!
 18. First up realized how many books on the goodreads api don't have working thumbnails. This is weird since they have them on the main page for the book. Another example of their APIs being out of date. Gotta pull these from AMZ.
-19. 
+19. Now that I'm actually looking through it in detail, the amazon html is not laid out with well identified descriptors and whatnot, so not only do I need to do string parsing to pull out things like the product details (which you'd expect to be in a labeled section), but I'd have to list parse all the elements which are also unnamed/etc. The web page not only looks like it's from 2000 but it's mostly generated in code that looks like that too. ;) It's ridiculous.
+20. At this point due to incomplete data in goodreads api, parsing problems with amazon's api, and the fact that neither of these seem to have really interesting elements about books, I'm going to call this project done as far as the basic data I've pulled out. Ugh. Next up, writing some queries to extract data from the local book db I've now built, which has bits like:
+
+```
+grid|title|amz_asin|myRating|date_added|image_url|publication_year|num_pages|description|average_rating|series_title|series_count
+9188338|B003P2WO5E|The Way of Kings (The Stormlight Archive, #1)|5|Sun Jan 14 14:31:36 -0800 2018|https://images-na.ssl-images-amazon.com/images/I/51ZX3mqLFzL._SY346_.jpg|2010|1280|...description...|4.65|The Stormlight Archive|9
+```
 
