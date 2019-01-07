@@ -22,5 +22,8 @@ this moment and I've no idea if it'll work for anyone else. ;)
 13. Looks like the above happens when a new goodreads id is created for a book. Possibly can be found via work.best_book_id? Checked - nope, sometimes that leads to hardcover. Hrm. Seems like the easiest way to solve this long term is to manually go through the ~15 or so books on gr and switch the editions on my shelf, then re-run.
 14. Some of the GR books with ASINs point to old ASINs so I have to update all of those on GR too. Noice.
 15. Whoah I found some books that weren't available anymore! Weird. Ignoring those.
-
+16. Got everything loaded into local dbs, messing with extraction into a table for querying
+17. Just realized I'm running code/tests on ubuntu-on-windows and it uses node8 instead of the version of node10 I have installed on windows (duh), which explains why I've been seeing some weird es6 errors attempting various things. Fixing this!
+18. First up realized how many books on the goodreads api don't have working thumbnails. This is weird since they have them on the main page for the book. Another example of their APIs being out of date. Gotta pull these from AMZ.
+19. 
 
