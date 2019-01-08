@@ -37,7 +37,7 @@ const db = new sqlite3.Database("cache/localdb.sqlite");
 // * image_url that isn't crap?
 
 db.run(
-  "CREATE TABLE IF NOT EXISTS bookData (grid TEXT PRIMARY KEY, amz_asin TEXT, title TEXT, myRating TEXT, date_added TEXT, image_url TEXT, publication_year TEXT, num_pages TEXT, description TEXT, average_rating TEXT, series_title TEXT, series_count TEXT)"
+  "CREATE TABLE IF NOT EXISTS bookData (grid TEXT PRIMARY KEY, amz_asin TEXT, title TEXT, myRating TEXT, date_added INTEGER, image_url TEXT, publication_year TEXT, num_pages TEXT, description TEXT, average_rating TEXT, series_title TEXT, series_count TEXT)"
 );
 
 db.get(
@@ -65,6 +65,7 @@ db.get(
                 // Grab the AMZ data
                 var thisBookImage =
                   grbookjs.GoodreadsResponse.book[0].image_url[0];
+                var thisReviewDate = Date.parse(review.date_added[0]) / 1000;
                 db.get(
                   "SELECT rawData from responseData where name = ?",
                   [grbookjs.GoodreadsResponse.book[0].kindle_asin[0]],
@@ -74,7 +75,7 @@ db.get(
                       thisBookImage = amzHtml.querySelector(
                         "#ebooksImgBlkFront"
                       ).rawAttributes.src;
-                      console.log(thisBookImage);
+                      //console.log(thisBookImage);
                       // This should be a function
                       if (
                         typeof grbookjs.GoodreadsResponse.book[0]
@@ -99,10 +100,9 @@ db.get(
                           review.book[0].title[0],
                           grbookjs.GoodreadsResponse.book[0].kindle_asin[0],
                           review.rating[0],
-                          review.date_added[0],
+                          thisReviewDate,
                           thisBookImage,
-                          grbookjs.GoodreadsResponse.book[0]
-                            .publication_year[0],
+                          grbookjs.GoodreadsResponse.book[0].publication_year[0],
                           grbookjs.GoodreadsResponse.book[0].num_pages[0],
                           grbookjs.GoodreadsResponse.book[0].description[0],
                           grbookjs.GoodreadsResponse.book[0].average_rating[0],
@@ -135,7 +135,7 @@ db.get(
                           review.book[0].title[0],
                           grbookjs.GoodreadsResponse.book[0].kindle_asin[0],
                           review.rating[0],
-                          review.date_added[0],
+                          thisReviewDate,
                           thisBookImage,
                           grbookjs.GoodreadsResponse.book[0]
                             .publication_year[0],

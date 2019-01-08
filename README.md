@@ -32,4 +32,34 @@ this moment and I've no idea if it'll work for anyone else. ;)
 grid|title|amz_asin|myRating|date_added|image_url|publication_year|num_pages|description|average_rating|series_title|series_count
 9188338|B003P2WO5E|The Way of Kings (The Stormlight Archive, #1)|5|Sun Jan 14 14:31:36 -0800 2018|https://images-na.ssl-images-amazon.com/images/I/51ZX3mqLFzL._SY346_.jpg|2010|1280|...description...|4.65|The Stormlight Archive|9
 ```
+21. Hrm I should probably convert the timestamp into something sqlite can more easily process with its datetime functions. 
+22. 88 books without num_pages from goodreads api, 113 without a publication year, etc. Ridiculous. (see #20) Terrible API.
 
+# Queries for statistics
+
+1. Number of books: `select count(*) from bookData;`
+2. Number of books read by month of the year: `select strftime('%m', datetime(date_added, 'unixepoch')) as Month, count(*) from bookData group by Month;`
+3. List of series titles and books read this year in each series: `select series_title, count(*) as count from bookData group by series_title order by count;`
+   * note - lots of 1 books in a series because they were new books in a series I previously read
+4. Ratings breakdown: `select myRating, count(*) from bookData group by myRating;`
+5. Books I enjoyed a ton (5 stars): `select title,series_title from bookData where myRating = '5' order by series_title;`
+6. top 50 books I read that other people enjoyed, average rating vs mine: `select title,average_rating,myRating from bookData order by average_rating desc limit 50;`
+7. I selected all the descriptions, dumped those into a text file, removed all the stop words, and ran it through a word cloud for fun
+8. Get some copy paste code to show all the thumbnails: `select '<img src="' || image_url || '" width=50>' from bookData;` (in column mode) - wait that won't work on a normal blog, hrm
+9. Get all URL's: `select image_url from bookData order by date_added;`
+
+## Downloading thumbnails
+
+1. Get them all via wget, renaming them to keep the order - `get-images.sh` will do this
+2. From the thumbnails directory, use ImageMagick to create a montage: `montage -geometry 190x+4 -tile 20x -border 0 `ls -1 | sort -nr | tr "\n" " "` ../thumbnails.jpg`
+
+
+
+
+
+
+## other notes
+
+1. `.mode csv`
+2. `datetime(date_added, 'unixepoch')` converts epoch to readable timestamp in sqlite
+3. weird conversion for stringfrom time: `select strftime('%Y', datetime(date_added, 'unixepoch')) from bookData;`
