@@ -4,6 +4,40 @@ I wanted to summarize some information about the books I've read,
 which leads us to this. It's an experimental work in progress at
 this moment and I've no idea if it'll work for anyone else. ;)
 
+There are some notes to myself below, written as I went through this. Here's a brief summary:
+
+* The Goodreads APIs are all terrible. I didn't realize so many books would be missing information until I started fetching the data for all the books - I guess the random book I chose to start with was good.
+  * This includes stuff like number of pages, date of publication, huge lack of images, etc.
+  * Not to mention the API returns XML and a ton of excess stuff
+* To get around usage limits (1 r/s) for the Goodreads APIs in development, `prep-data.js` just grabs all the needed data and stores it in an sqlite db
+  * Development on API responses is a lot easier at scale when you don't have to request them but can just fetch them 
+* `parse-local.js` then goes through the local API responses in the DB and creates a summary of data in a new table
+  * I still sometimes struggle with async data manipulation, so I have some sloppy code here that could be cleaned up with promises
+* Once the db is populated, I just ran some basic queries to grab data out. If I visualize some of it, it will just be done in google docs.
+* I hard coded 2018 into everything because I highly doubt this code will work in 2019 since I expect the degradation of these APIs to continue
+* I wanted to also process Amazon digital product pages for data, but turns out this information isn't labeled and would require raw text parsing... not a worthwhile ROI for a bit more data (like total number of pages read)
+
+If for some reason you want to try to do this yourself, you'll need to set up a `.env` file with Goodreads API information as follows:
+
+```
+GOODREADS_API_KEY=$X
+GOODREADS_API_SECRET=$X
+GOODREADS_USER_ID=$X
+```
+
+(where `$X` is the appropriate information)
+
+Then run:
+
+```
+npm install
+mkdir cache
+node prep-data.js
+node parse-local.js
+```
+
+And in theory you're good to go? I haven't tested it being portable.
+
 # Notes
 
 1. the reviews list API seems to be the only effective way to get books from my read shelf
